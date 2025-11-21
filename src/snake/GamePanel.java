@@ -51,27 +51,39 @@ public class GamePanel extends JPanel implements ActionListener {
     }
 
     public void draw(Graphics g) {
-        // draw grid
-        for (int i = 0; i < SCREEN_HEIGHT / UNIT_SIZE; i++) {
-            g.drawLine(i * UNIT_SIZE, 0, i * UNIT_SIZE, SCREEN_HEIGHT);
-        }
-        for (int i = 0; i < SCREEN_WIDTH / UNIT_SIZE; i++) {
-            g.drawLine(0, i * UNIT_SIZE, SCREEN_WIDTH, i * UNIT_SIZE);
-        }
-        // draw initial apple
-        g.setColor(Color.red);
-        g.fillOval(appleX, appleY, UNIT_SIZE, UNIT_SIZE);
-
-        // draw snake
-        for (int i = 0; i < bodyParts; i++) {
-            if (i == 0) { // draw head
-                g.setColor(Color.green);
-                g.fillRect(x[i], y[i], UNIT_SIZE, UNIT_SIZE);
-            } else { // draw body
-                g.setColor(new Color(45, 180, 0));
-                g.fillRect(x[i], y[i], UNIT_SIZE, UNIT_SIZE);
-
+        if (running) {
+            // draw grid
+            for (int i = 0; i < SCREEN_HEIGHT / UNIT_SIZE; i++) {
+                g.drawLine(i * UNIT_SIZE, 0, i * UNIT_SIZE, SCREEN_HEIGHT);
             }
+            for (int i = 0; i < SCREEN_WIDTH / UNIT_SIZE; i++) {
+                g.drawLine(0, i * UNIT_SIZE, SCREEN_WIDTH, i * UNIT_SIZE);
+            }
+            // draw initial apple
+            g.setColor(Color.red);
+            g.fillOval(appleX, appleY, UNIT_SIZE, UNIT_SIZE);
+
+            // draw snake
+            for (int i = 0; i < bodyParts; i++) {
+                if (i == 0) { // draw head
+                    g.setColor(Color.green);
+                    g.fillRect(x[i], y[i], UNIT_SIZE, UNIT_SIZE);
+                } else { // draw body
+                    g.setColor(new Color(45, 180, 0));
+                    g.fillRect(x[i], y[i], UNIT_SIZE, UNIT_SIZE);
+
+                }
+            }
+            // draw score
+            g.setColor(Color.gray);
+            g.setFont(new Font("Ink Free", Font.BOLD, 25));
+            FontMetrics metrics = getFontMetrics(g.getFont());
+
+            g.drawString("Apples: " + applesEaten, (SCREEN_WIDTH - metrics.stringWidth("Apples: " + applesEaten)),
+                    g.getFont().getSize());
+
+        } else {
+            gameOver(g);
         }
     }
 
@@ -109,7 +121,11 @@ public class GamePanel extends JPanel implements ActionListener {
     }
 
     public void checkApple() {
-
+        if ((x[0] == appleX) && (y[0] == appleY)) {
+            bodyParts++;
+            applesEaten++;
+            newApple();
+        }
     }
 
     public void checkCollisions() {
@@ -138,6 +154,23 @@ public class GamePanel extends JPanel implements ActionListener {
     }
 
     public void gameOver(Graphics g) {
+        // game over scr
+        g.setColor(Color.red);
+        g.setFont(new Font("Ink Free", Font.BOLD, 75));
+        FontMetrics metrics = getFontMetrics(g.getFont());
+
+        g.drawString("Game Over", (SCREEN_WIDTH - metrics.stringWidth("Game Over")) / 2, SCREEN_HEIGHT / 2);
+        g.setFont(new Font("Ink Free", Font.BOLD, 25));
+        metrics = getFontMetrics(g.getFont());
+        g.drawString("Restart? [space]", (SCREEN_WIDTH - metrics.stringWidth("Restart? [space]")) / 2,
+                SCREEN_HEIGHT / 2 + 75);
+
+        g.setColor(Color.red);
+        g.setFont(new Font("Ink Free", Font.BOLD, 25));
+        metrics = getFontMetrics(g.getFont());
+
+        g.drawString("Apples: " + applesEaten, (SCREEN_WIDTH - metrics.stringWidth("Apples: " + applesEaten)),
+                g.getFont().getSize());
 
     }
 
@@ -147,6 +180,8 @@ public class GamePanel extends JPanel implements ActionListener {
             move();
             checkApple();
             checkCollisions();
+        } else {
+            move();
         }
         repaint();
     }
@@ -156,27 +191,39 @@ public class GamePanel extends JPanel implements ActionListener {
         @Override
         public void keyPressed(KeyEvent e) {
             switch (e.getKeyCode()) {
-                // check for inputs of the arrow keys
+                // check for inputs of wasd
                 // allow only 90deg turns
-                case KeyEvent.VK_LEFT:
+                case KeyEvent.VK_A:
                     if (direction != 'R') {
                         direction = 'L';
                     }
                     break;
-                case KeyEvent.VK_RIGHT:
+                case KeyEvent.VK_D:
                     if (direction != 'L') {
                         direction = 'R';
                     }
                     break;
-                case KeyEvent.VK_UP:
+                case KeyEvent.VK_W:
                     if (direction != 'D') {
                         direction = 'U';
                     }
                     break;
-                case KeyEvent.VK_DOWN:
+                case KeyEvent.VK_S:
                     if (direction != 'U') {
                         direction = 'D';
                     }
+                    break;
+
+                case KeyEvent.VK_SPACE: // reset on gameover
+                    if (!running) {
+                        running = true;
+                    }
+                    bodyParts = 6; // initial bodyparts
+                    applesEaten = 0;
+                    newApple();
+                    direction = 'R'; // 'R'/'L'/'U'/'D'
+                    x[0] = 0;
+                    y[0] = 0;
                     break;
 
                 default:
